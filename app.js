@@ -520,15 +520,25 @@ function renderList(rows, container, type){
     const meta=document.createElement('div'); meta.className='meta';
 
     const due = r.DueDateTime ? new Date(r.DueDateTime) : null;
-    let dueDisplay = 'No due';
-    if (due){
-      if (r.Recurrence === 'weekly')      dueDisplay = `WK ${walmartWeekNumber(due)}`;
-      else if (r.Recurrence === 'monthly')dueDisplay = monthLabel(due);
-      else                                 dueDisplay = due.toLocaleString();
+
+    const bits = [];
+
+    if (r.Recurrence === 'weekly') {
+      if (due) bits.push(`WK ${walmartWeekNumber(due)}`);
+    } else if (r.Recurrence === 'monthly') {
+      if (due) bits.push(monthLabel(due));
+    } else if (r.Recurrence === 'custom') {
+      // hide active days completely → only show stamp if completed
+    } else {
+      if (due) bits.push(due.toLocaleString());
     }
-    const whoText = r.CompletedByInitials ? ` • ✓ ${r.CompletedByInitials} @ ${new Date(r.CompletedAt).toLocaleTimeString()}` : "";
-    const daysText = r.ActiveDays ? ` • Days: ${r.ActiveDays}` : "";
-    meta.textContent = `${dueDisplay} • ${r.Category||'General'} • ${r.Assignees||'Anyone'}${daysText}${whoText}`;
+
+    if (r.Status === 'Done' && r.CompletedByInitials) {
+      const t = r.CompletedAt ? new Date(r.CompletedAt).toLocaleTimeString() : '';
+      bits.push(`✓ ${r.CompletedByInitials} @ ${t}`);
+    }
+
+    meta.textContent = bits.join(' • ');
 
     left.appendChild(title); left.appendChild(meta);
 
