@@ -135,5 +135,64 @@ footer{padding:12px;text-align:center;font-size:12px;color:var(--muted)}
 /* Give a touch more right padding so kebab + handle don’t collide */
 .card { padding-right: 84px; }
 
+/* === Mobile-friendly spacing & polish overrides === */
+
+/* Tabs (SWFL / CBL / Accountabilities / Notes) */
+.tabs {
+  display: flex;
+  gap: 0.5rem;        /* spacing between tabs */
+  overflow-x: auto;   /* scroll if screen is too narrow */
+  padding: 0.25rem 0;
+}
+.tab {
+  padding: 10px 14px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Pills (Today / Weekly / Monthly) */
+.pills {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+}
+.pill {
+  flex: 1;                     /* evenly stretch across screen */
+  text-align: center;
+  padding: 6px 0;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+/* Task cards */
+.card {
+  margin: 0.5rem 0;     /* breathing room between tasks */
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+.card .title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.card .meta {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Complete / Undo buttons */
+.btn.complete,
+.btn.undo {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 16px;
+}
+
+/* Kebab menu button (⋯) */
+.kebab > button {
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 6px;
+}
+
 
   
