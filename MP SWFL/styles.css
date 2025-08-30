@@ -1,0 +1,139 @@
+/* Walmart Themed UI – clean + app-like */
+:root{
+  --blue:#0071ce; --blue-600:#005da8;
+  --gold:#ffc220; --gold-600:#e5ae1d;
+  --bg:#f5f8fb; --panel:#fff; --text:#1a1a1a;
+  --muted:#6b7280; --stroke:#e5e7eb; --danger:#d83a3a; --teal:#12b3b6;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,"Noto Sans";background:var(--bg);color:var(--text)}
+
+/* Header */
+header{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;background:linear-gradient(180deg,var(--blue),#066fcb);color:#fff;border-bottom:1px solid rgba(255,255,255,.12)}
+h1{margin:0;font-size:18px;font-weight:700} #whoami{font-size:13px;opacity:.9}
+
+/* Tabs */
+.tabs{position:sticky;top:56px;z-index:20;display:flex;gap:8px;padding:8px;background:var(--panel);border-bottom:1px solid var(--stroke)}
+.tab{flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--stroke);background:#fafbfd;color:#0f172a;font-weight:600;transition:transform .08s,background .2s,border .2s}
+.tab:hover{background:#f1f6fd} .tab.active{background:#fff;border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+
+/* Layout */
+main{padding:12px;max-width:980px;margin:0 auto}
+.tab-panel{display:none} .tab-panel.active{display:block}
+
+/* Filters */
+.filters{display:flex;gap:8px;margin:6px 0 12px;flex-wrap:wrap}
+.pill{border:1px solid var(--stroke);background:#fff;color:#0f172a;border-radius:999px;padding:6px 12px;font-weight:600;font-size:13px}
+.pill.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* Cards */
+.card-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.card{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--stroke);border-radius:14px;background:var(--panel);box-shadow:var(--shadow)}
+.card .title{font-weight:700} .card .meta{color:var(--muted);font-size:12px;margin-top:4px}
+
+/* cadence ribbons */
+.card.daily{border-left:6px solid var(--gold)}
+.card.weekly{border-left:6px solid var(--blue)}
+.card.monthly{border-left:6px solid var(--danger)}
+.card.custom{border-left:6px solid var(--teal)}
+
+/* Buttons */
+.btn{border:none;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;background:#eef2f7;transition:filter .12s,transform .06s}
+.btn:active{transform:translateY(1px)}
+.btn.complete{background:var(--gold);color:#000} .btn.complete:hover{filter:brightness(.95)}
+.btn.undo{background:#d1d5db;color:#0f172a} .btn.undo:hover{filter:brightness(.95)}
+
+/* Forms */
+details.admin{margin-top:12px} details.admin>summary{font-weight:700;cursor:pointer;padding:8px 0}
+.admin form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.admin input,.admin select{border:1px solid var(--stroke);border-radius:10px;padding:10px;background:#fff}
+.admin button{grid-column:1 / -1}
+
+/* custom-day chips */
+.dow{display:flex;gap:8px;flex-wrap:wrap;padding:6px 0}
+.dow label{background:#fff;border:1px solid var(--stroke);padding:6px 10px;border-radius:999px;font-size:13px}
+
+/* Notes */
+.note-form{display:flex;gap:8px;margin-top:10px}
+.note-form input{flex:1;padding:10px;border:1px solid var(--stroke);border-radius:10px;background:#fff}
+.note-form button{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700}
+.note-form button:hover{background:var(--blue-600)}
+
+/* Footer */
+footer{padding:12px;text-align:center;font-size:12px;color:var(--muted)}
+
+
+/* Kebab in card’s top-right */
+.card .kebab {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.card .kebab > button {
+  padding: 2px 8px;
+  opacity: .65;
+  font-weight: 800;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.card .kebab > button:hover { opacity: 1; }
+
+/* Dropdown menu */
+.card .card-menu {
+  position: absolute;
+  top: 32px;           /* below the kebab button */
+  right: 8px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.1);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+  padding: 6px 0;
+  min-width: 140px;
+  z-index: 5;
+  display: none;       /* toggled by JS */
+}
+.card .card-menu.open { display: block; }
+.card .card-menu button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.card .card-menu button:hover {
+  background: rgba(0,0,0,.05);
+}
+.card .card-menu .danger { color: #b00020; }
+/* leave extra room on the right so the kebab never sits on top of buttons */
+.card{
+  padding:12px 14px;
+  padding-right:124px;          /* <— was ~14px; this pushes content inwards */
+}
+
+/* nudge the kebab tighter into the corner */
+.card .kebab{ top:6px; right:10px; }
+.card .kebab > button{ padding:2px 6px; line-height:1; }
+
+/* bring the Complete/Undo button in a bit from the edge */
+.card .btn.complete,
+.card .btn.undo{ margin-right:12px; }
+
+/* Drag handle */
+.card .drag-handle{
+  cursor: grab;
+  user-select: none;
+  font-weight: 800;
+  opacity: .5;
+  padding: 0 8px;
+}
+.card .drag-handle:active{ cursor: grabbing; opacity:.8; }
+
+/* Give a touch more right padding so kebab + handle don’t collide */
+.card { padding-right: 84px; }
+
+
+  
