@@ -1,0 +1,13 @@
+{
+  "name": "SWFL",
+  "short_name": "SWFL",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0071ce",
+  "icons": [
+    {"src":"MPicon.png","sizes":"192x192","type":"image/png"},
+    {"src":"MPicon.png","sizes":"512x512","type":"image/png"}
+  ]
+}
+

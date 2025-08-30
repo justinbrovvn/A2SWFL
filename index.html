@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="theme-color" content="#0071ce">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="MPicon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MP A2 SWFL</title>
+
+  <style>
+    :root { --blue:#1074e7; --yellow:#f2b300; --bg:#f7f7f8; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial; background:var(--bg); }
+    header { background:var(--blue); color:#fff; padding:10px 14px; display:flex; align-items:center; gap:16px; }
+    h1 { font-size:18px; margin:0; font-weight:700; }
+    #whoami { margin-left:auto; opacity:.9; }
+
+    .tabs { display:flex; gap:8px; padding:10px 12px; background:#fff; border-bottom:1px solid #e6e6e6; position:sticky; top:0; z-index:3;}
+    .tab { border:0; padding:8px 10px; background:#eef5ff; border-radius:8px; cursor:pointer; }
+    .tab.active { background:#d9eaff; font-weight:700; }
+
+    main { padding:14px; max-width:980px; margin:0 auto; }
+    section.panel { display:none; }
+    section.panel.active { display:block; }
+
+    .pillbar { display:flex; gap:8px; margin:10px 0 14px; }
+    .pill { border:1px solid #e6e6e6; background:#fff; padding:6px 10px; border-radius:999px; cursor:pointer; }
+    .pill.active { background:#e9f2ff; border-color:#d0e3ff; font-weight:600; }
+
+    .stack { display:flex; flex-direction:column; gap:10px; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    input, textarea, select, button { font:inherit; }
+    input, textarea, select { padding:10px 12px; border:1px solid #ddd; border-radius:10px; background:#fff; }
+    textarea { min-height:60px; }
+
+    .btn { padding:8px 14px; border-radius:999px; border:0; background:#eee; cursor:pointer; }
+    .btn.complete { background:var(--yellow); color:#222; font-weight:700; }
+    .btn.undo { background:#ddd; }
+
+    ul.stack { list-style:none; padding:0; margin:10px 0 30px; }
+    .card { position:relative; display:flex; justify-content:space-between; gap:16px; align-items:center;
+            padding:12px 14px; border-radius:14px; background:#fff; border:1px solid #ececec; }
+    .card .title { font-weight:700; }
+    .card .meta { font-size:12px; color:#666; margin-top:3px; }
+
+    /* Kebab + dropdown */
+    .card .kebab { position:absolute; top:8px; right:8px; }
+    .card .kebab > button { padding:2px 8px; opacity:.65; font-weight:800; border:none; background:transparent; cursor:pointer; }
+    .card .kebab > button:hover { opacity:1; }
+    .card .card-menu { position:absolute; top:32px; right:8px; background:#fff; border:1px solid rgba(0,0,0,.1);
+      border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,.15); padding:6px 0; min-width:140px; z-index:5; display:none; }
+    .card .card-menu.open { display:block; }
+    .card .card-menu button { width:100%; text-align:left; background:transparent; border:0; padding:8px 12px; cursor:pointer; }
+    .card .card-menu button:hover { background:rgba(0,0,0,.05); }
+    .card .card-menu .danger { color:#b00020; }
+
+    details { background:#fff; border:1px solid #eee; border-radius:12px; padding:10px 12px; }
+    details summary { cursor:pointer; font-weight:600; }
+
+    .toolbar { display:flex; gap:8px; align-items:center; }
+  </style>
+
+  <!-- Supabase -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+</head>
+<body>
+  <header>
+    <h1>MP A2 SWFL</h1>
+    <div id="whoami"></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="todo">SWFL (To-Do)</button>
+    <button class="tab" data-tab="cbl">CBL / Axonify</button>
+    <button class="tab" data-tab="acct">Accountabilities/Check-ins</button>
+    <button class="tab" data-tab="notes">Notes</button>
+    <button class="tab" data-tab="completed">Completed</button>
+  </div>
+
+  <main>
+    <!-- SWFL -->
+    <section id="tab-todo" class="panel active">
+      <div class="pillbar">
+        <button class="pill active" data-filter="today">Today</button>
+        <button class="pill" data-filter="weekly">Weekly</button>
+        <button class="pill" data-filter="monthly">Monthly</button>
+      </div>
+
+      <ul id="todoList" class="stack"></ul>
+
+      <details>
+        <summary>➕ Add SWFL item</summary>
+        <form id="newTaskForm" class="stack">
+          <div class="row">
+            <input id="title" placeholder="Title" required />
+            <select id="recurrence">
+              <option value="oneoff">One-off</option>
+              <option value="custom">Daily (custom days)</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+
+          <!-- One-off / custom datetime -->
+          <div id="dtRow" class="row">
+            <input id="due" type="datetime-local" />
+          </div>
+
+          <!-- Weekly -->
+          <div id="weekRow" class="row" style="display:none">
+            <input id="dueWeek" type="week" />
+          </div>
+
+          <!-- Monthly -->
+          <div id="monthRow" class="row" style="display:none">
+            <input id="dueMonth" type="month" />
+          </div>
+
+          <!-- Custom days -->
+          <div id="customDays" class="row" style="display:none">
+            <label>Active days:</label>
+            <label><input type="checkbox" name="day" value="Sun">Sun</label>
+            <label><input type="checkbox" name="day" value="Mon" checked>Mon</label>
+            <label><input type="checkbox" name="day" value="Tue" checked>Tue</label>
+            <label><input type="checkbox" name="day" value="Wed" checked>Wed</label>
+            <label><input type="checkbox" name="day" value="Thu" checked>Thu</label>
+            <label><input type="checkbox" name="day" value="Fri">Fri</label>
+            <label><input type="checkbox" name="day" value="Sat">Sat</label>
+          </div>
+
+          <div class="row">
+            <input id="assignees" placeholder="Assignees (optional)" />
+            <input id="category"  placeholder="Category (optional)" />
+            <button class="btn">Add</button>
+          </div>
+        </form>
+      </details>
+    </section>
+
+    <!-- CBL / Axonify -->
+    <section id="tab-cbl" class="panel">
+      <ul id="cblList" class="stack"></ul>
+
+      <details>
+        <summary>➕ Add CBL/Axonify</summary>
+        <form id="cblForm" class="stack">
+          <div class="row">
+            <input id="cblPerson" placeholder="Initials (e.g., JB)" required />
+            <select id="cblType">
+              <option value="CBL">CBL</option>
+              <option value="Axonify">Axonify</option>
+            </select>
+          </div>
+
+          <!-- For CBL only -->
+          <div class="row" id="cblDueRow">
+            <input id="cblDueBy" type="datetime-local" placeholder="Due by (CBL)" />
+          </div>
+
+          <!-- Optional seed for Axonify “last done” -->
+          <div class="row" id="axSeedRow" style="display:none">
+            <input id="axLastDone" type="date" placeholder="Last done (optional)" />
+            <small>Used to start the 30-day counter. Leave blank to start at 0.</small>
+          </div>
+
+          <div class="row">
+            <button class="btn">Add</button>
+          </div>
+        </form>
+      </details>
+    </section>
+
+    <!-- Accountabilities (Person + Type only) -->
+    <section id="tab-acct" class="panel">
+      <ul id="acctList" class="stack"></ul>
+      <details>
+        <summary>➕ Add accountability</summary>
+        <form id="acctForm" class="row">
+          <input id="acctPerson" placeholder="Initials (e.g., JB)" required />
+          <input id="acctType"   placeholder="Type (e.g., Coaching, Follow-up)" required />
+          <button class="btn">Add</button>
+        </form>
+      </details>
+    </section>
+
+    <!-- Notes -->
+    <section id="tab-notes" class="panel">
+      <ul id="notesList" class="stack"></ul>
+      <div class="row">
+        <input id="noteText" placeholder="Add a quick note…" style="flex:1" />
+        <button class="btn" id="notePost">Post</button>
+      </div>
+      <form id="noteForm" style="display:none"></form>
+    </section>
+
+    <!-- Completed (SWFL only) -->
+    <section id="tab-completed" class="panel">
+      <div class="toolbar">
+        <button class="btn" id="completedRefresh">Refresh</button>
+      </div>
+      <ul id="completedList" class="stack"></ul>
+      <div><button class="btn" id="completedMore">Load more</button></div>
+    </section>
+  </main>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
