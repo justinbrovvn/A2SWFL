@@ -160,66 +160,75 @@ async function persistOrder(table, listEl){
 }
 async function persistSwflOrder(listEl){ return persistOrder('TaskInstances', listEl); }
 
-// === AUTO-REFRESH WINDOWS & DAILY PURGE ===
 async function refreshCadenceWindows(){
   const now = new Date();
+  const dayS   = startOfDay(now);
   const weekS  = startOfWeekSat(now);
   const monthS = startOfMonth5(now);
-  const dayS   = startOfDay(now);
 
-  // Weekly/Monthly (SWFL): reset for new window if previously Done
-  const { data: swfl, error: swflErr } = await sb.from('TaskInstances')
-    .select('*').eq('AppKey', SHARED_APP_KEY).in('Recurrence', ['weekly','monthly']);
-  if (!swflErr && swfl) {
+  // Reset SWFL recurrences
+  const { data: swfl } = await sb.from('TaskInstances')
+    .select('*')
+    .eq('AppKey', SHARED_APP_KEY)
+    .in('Recurrence', ['daily','custom','weekly','monthly']);
+
+  if (swfl) {
     for (const row of swfl){
-      if (row.Status === 'Done' && row.CompletedAt){
-        if (row.Recurrence === 'weekly' && new Date(row.CompletedAt) < weekS){
-          const nextDue = new Date(weekS);
-          const orig = new Date(row.DueDateTime);
-          nextDue.setHours(orig.getHours(), orig.getMinutes(), 0, 0);
-          await sb.from('TaskInstances').update({
-            Status:'Not Started', CompletedByInitials:null, CompletedAt:null,
-            DueDateTime: nextDue.toISOString(), AppKey: SHARED_APP_KEY
-          }).eq('id', row.id);
-        }
-        if (row.Recurrence === 'monthly' && new Date(row.CompletedAt) < monthS){
-          const nextDue = new Date(monthS);
-          const orig = new Date(row.DueDateTime);
-          nextDue.setHours(orig.getHours(), orig.getMinutes(), 0, 0);
-          await sb.from('TaskInstances').update({
-            Status:'Not Started', CompletedByInitials:null, CompletedAt:null,
-            DueDateTime: nextDue.toISOString(), AppKey: SHARED_APP_KEY
-          }).eq('id', row.id);
-        }
+      const due = row.DueDateTime ? new Date(row.DueDateTime) : null;
+      if (!due) continue;
+
+      // Daily & custom → reset if due date is before today's start
+      if ((row.Recurrence === 'daily' || row.Recurrence === 'custom') && due < dayS) {
+        const nextDue = new Date(dayS);
+        const orig = new Date(row.DueDateTime);
+        nextDue.setHours(orig.getHours(), orig.getMinutes(), 0, 0);
+        await sb.from('TaskInstances').update({
+          Status:'Not Started',
+          CompletedByInitials:null,
+          CompletedAt:null,
+          DueDateTime: nextDue.toISOString(),
+          AppKey: SHARED_APP_KEY
+        }).eq('id', row.id);
+      }
+
+      // Weekly → reset if due date is before this Walmart week start
+      if (row.Recurrence === 'weekly' && due < weekS) {
+        const nextDue = new Date(weekS);
+        const orig = new Date(row.DueDateTime);
+        nextDue.setHours(orig.getHours(), orig.getMinutes(), 0, 0);
+        await sb.from('TaskInstances').update({
+          Status:'Not Started',
+          CompletedByInitials:null,
+          CompletedAt:null,
+          DueDateTime: nextDue.toISOString(),
+          AppKey: SHARED_APP_KEY
+        }).eq('id', row.id);
+      }
+
+      // Monthly → reset if due date is before this month's start
+      if (row.Recurrence === 'monthly' && due < monthS) {
+        const nextDue = new Date(monthS);
+        const orig = new Date(row.DueDateTime);
+        nextDue.setHours(orig.getHours(), orig.getMinutes(), 0, 0);
+        await sb.from('TaskInstances').update({
+          Status:'Not Started',
+          CompletedByInitials:null,
+          CompletedAt:null,
+          DueDateTime: nextDue.toISOString(),
+          AppKey: SHARED_APP_KEY
+        }).eq('id', row.id);
       }
     }
   }
-
-  // Custom (daily-picked-days): if completed before today's 5am, clear stamp
-  {
-    const { data: customDone, error: cErr } = await sb.from('TaskInstances')
-      .select('id, CompletedAt')
-      .eq('AppKey', SHARED_APP_KEY)
-      .eq('Recurrence', 'custom')
-      .eq('Status', 'Done')
-      .lt('CompletedAt', dayS.toISOString());
-    if (!cErr && customDone && customDone.length){
-      const ids = customDone.map(r => r.id);
-      await sb.from('TaskInstances').update({
-        Status: 'Not Started',
-        CompletedByInitials: null,
-        CompletedAt: null,
-        AppKey: SHARED_APP_KEY
-      }).in('id', ids);
-    }
-  }
-
-  // CBL / Accountabilities — purge any completed before today’s 5:00 AM
+  // Purge done CBL/Acct before today's 5am
   for (const t of ['CBL','Accountabilities']){
-    await sb.from(t)
-      .delete().lt('CompletedAt', dayS.toISOString())
-      .eq('Status','Done').eq('AppKey', SHARED_APP_KEY);
+    await sb.from(t).delete()
+      .lt('CompletedAt', dayS.toISOString())
+      .eq('Status','Done')
+      .eq('AppKey', SHARED_APP_KEY);
   }
+}
+
 }
 
 // === LOADERS ===
